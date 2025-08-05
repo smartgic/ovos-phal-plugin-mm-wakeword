@@ -1,29 +1,18 @@
 #!/usr/bin/env python3
-from os import walk, path
+import os
+
 from setuptools import setup
 
-BASEDIR = path.abspath(path.dirname(__file__))
-URL = "https://github.com/smartgic/skill-ovos-mm-wakeword"
-SKILL_CLAZZ = "MagicMirrorWakeWord"
-PYPI_NAME = "skill-ovos-mm-wakeword"
-
-SKILL_AUTHOR, SKILL_NAME = URL.split(".com/", maxsplit=1)[-1].split("/")
-SKILL_PKG = SKILL_NAME.lower().replace("-", "_")
-PLUGIN_ENTRY_POINT = (
-    f"{SKILL_NAME.lower()}.{SKILL_AUTHOR.lower()}={SKILL_PKG}:{SKILL_CLAZZ}"
-)
-BASE_PATH = BASE_PATH = path.abspath(
-    path.join(path.dirname(__file__), "skill_mm_wakeword")
-)
+BASEDIR = os.path.abspath(os.path.dirname(__file__))
 
 
 def get_version():
     """Find the version of the package"""
     version = None
-    version_file = path.join(BASE_PATH, "version.py")
+    version_file = os.path.join(BASEDIR, "ovos_phal_plugin_mm_wakeword", "version.py")
     major, minor, build, alpha = (None, None, None, None)
-    with open(version_file, encoding="utf-8") as file_version:
-        for line in file_version:
+    with open(version_file, encoding="utf8") as f:
+        for line in f:
             if "VERSION_MAJOR" in line:
                 major = line.split("=")[1].strip()
             elif "VERSION_MINOR" in line:
@@ -41,47 +30,57 @@ def get_version():
     return version
 
 
-def get_requirements(requirements_filename: str):
-    requirements_file = path.join(path.dirname(__file__), requirements_filename)
-    with open(requirements_file, "r", encoding="utf-8") as r:
-        requirements = r.readlines()
-    requirements = [
-        r.strip() for r in requirements if r.strip() and not r.strip().startswith("#")
-    ]
-    return requirements
+def package_files(directory):
+    paths = []
+    for path, _, filenames in os.walk(directory):
+        for filename in filenames:
+            paths.append(os.path.join("..", path, filename))
+    return paths
 
 
-def find_resource_files():
-    resource_base_dirs = ("locale", "intents", "dialog", "vocab", "regex", "ui")
-    package_data = ["*.json"]
-    for res in resource_base_dirs:
-        if path.isdir(path.join(BASE_PATH, res)):
-            for directory, _, files in walk(path.join(BASE_PATH, res)):
-                if files:
-                    package_data.append(
-                        path.join(directory.replace(BASE_PATH, "").lstrip("/"), "*")
-                    )
-    return package_data
+def required(requirements_file):
+    """Read requirements file and remove comments and empty lines."""
+    with open(os.path.join(BASEDIR, requirements_file), "r", encoding="utf8") as f:
+        requirements = f.read().splitlines()
+        if "MYCROFT_LOOSE_REQUIREMENTS" in os.environ:
+            print("USING LOOSE REQUIREMENTS!")
+            requirements = [
+                r.replace("==", ">=").replace("~=", ">=") for r in requirements
+            ]
+        return [pkg for pkg in requirements if pkg.strip() and not pkg.startswith("#")]
 
 
-with open("README.md", "r", encoding="utf-8") as file_readme:
-    long_description = file_readme.read()
+def get_description():
+    with open(os.path.join(BASEDIR, "README.md"), "r", encoding="utf8") as f:
+        long_description = f.read()
+    return long_description
 
+
+PLUGIN_ENTRY_POINT = "ovos-phal-plugin-mm-wakeword=ovos_phal_plugin_mm_wakeword:MmWakewordPlugin"
 setup(
-    name=PYPI_NAME,
+    name="ovos-phal-plugin-mm-wakeword",
     version=get_version(),
-    description="",
-    long_description=long_description,
+    description="A PHAL plugin to display wake word status on MagicMirror²",
+    long_description=get_description(),
     long_description_content_type="text/markdown",
-    url=URL,
-    author="Gaëtan Trellu",
+    url="https://github.com/smartgic/ovos-phal-plugin-mm-wakeword",
+    author="Gaëtan Trellu (goldyfruit)",
     author_email="gaetan.trellu@gmail.com",
-    license="MIT",
-    package_dir={SKILL_PKG: "skill_mm_wakeword"},
-    package_data={SKILL_PKG: find_resource_files()},
-    packages=[SKILL_PKG],
+    license="Apache-2.0",
+    packages=["ovos_phal_plugin_mm_wakeword"],
+    package_data={"": package_files("ovos_phal_plugin_mm_wakeword")},
+    install_requires=required("requirements.txt"),
+    zip_safe=True,
     include_package_data=True,
-    install_requires=get_requirements("requirements.txt"),
-    keywords="ovos skill voice assistant",
-    entry_points={"ovos.plugin.skill": PLUGIN_ENTRY_POINT},
+    classifiers=[
+        "Development Status :: 3 - Alpha",
+        "Intended Audience :: Developers",
+        "Topic :: Text Processing :: Linguistic",
+        "License :: OSI Approved :: Apache Software License",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
+    ],
+    entry_points={"ovos.plugin.phal": PLUGIN_ENTRY_POINT},
 )
