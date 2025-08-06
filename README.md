@@ -24,8 +24,9 @@ The plugin configuration file is `~/.config/OpenVoiceOS/ovos-phal-plugin-mm-wake
 | --------- | ------------------------ | ------------------------------------- |
 | `url`     | `http://localhost:8080`  | MagicMirror² URL                      |
 | `key`     | `N/A`                    | MagicMirror² API key                  |
+| `message` | `Listening...`           | Message displayed when triggered      |
 | `timeout` | `10`                     | HTTP request timeout in seconds       |
-| `verify`  | `false`                  | Verify SSL certificate               |
+| `verify`  | `false`                  | Verify SSL certificate                |
 
 ### Example
 
@@ -35,6 +36,7 @@ Configuration sample of `~/.config/OpenVoiceOS/ovos-phal-plugin-mm-wakeword.json
 {
   "url": "http://mm.home.lan",
   "key": "en323q9WBNMK3Q04WIPNEAsdfhesammhp44",
+  "message": "Listening...",
   "timeout": 10,
   "verify": false
 }
