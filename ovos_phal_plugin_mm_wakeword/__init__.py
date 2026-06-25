@@ -27,9 +27,7 @@ class MmWakewordPlugin(PHALPlugin):
 
         # Map bus events to methods
         self.bus.on("recognizer_loop:record_begin", self._handle_listener_started)
-        # self.bus.on("recognizer_loop:record_end", self._handle_listener_ended)
         self.bus.on("recognizer_loop:audio_output_end", self._handle_listener_ended)
-        # self.bus.on("ovos.utterance.cancelled", self._handle_listener_ended)
 
     def setup(self):
         """Check for settings requirements and prepare HTTP headers once
